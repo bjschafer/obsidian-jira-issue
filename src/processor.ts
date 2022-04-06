@@ -148,7 +148,7 @@ export class JiraIssueProcessor {
         const tagsRow = createDiv('ji-tags has-addons')
         createEl('img', {
             cls: 'fit-content',
-            attr: { src: issue.fields.issuetype.iconUrl, alt: issue.fields.issuetype.name },
+            attr: { src: issue.icon, alt: issue.fields.issuetype.name },
             title: issue.fields.issuetype.name,
             parent: createSpan({ cls: 'ji-tag is-light', parent: tagsRow })
         })

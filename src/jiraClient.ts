@@ -1,3 +1,4 @@
+import { exec, ExecException, execFile } from 'child_process'
 import { requestUrl, RequestUrlParam, RequestUrlResponse } from 'obsidian'
 import { IJiraIssue, IJiraSearchResults } from './interfaces'
 import { EAuthenticationTypes, IJiraIssueSettings } from "./settings"
@@ -22,7 +23,15 @@ export class JiraClient {
         if (this._settings.authenticationType === EAuthenticationTypes.BASIC) {
             requestHeaders['Authorization'] = 'Basic ' + Buffer.from(`${this._settings.username}:${this._settings.password}`).toString('base64')
         } else if (this._settings.authenticationType === EAuthenticationTypes.BEARER_TOKEN) {
-            requestHeaders['Authorization'] = `Bearer ${this._settings.bareToken}`
+            requestHeaders[this._settings.headerName] = `Bearer ${this._settings.bareToken}`
+        } else if (this._settings.authenticationType === EAuthenticationTypes.CUSTOM) {
+            const commandResults = execFile(this._settings.customCommand, function callback(error: ExecException, stdout: string, stderr: string) {
+                return stdout;
+            })
+            const foo = commandResults.stdout.read()
+            console.log(commandResults);
+
+            requestHeaders[this._settings.headerName] = commandResults
         }
         return requestHeaders
     }
@@ -50,13 +59,20 @@ export class JiraClient {
     }
 
     async getIssue(issue: string): Promise<IJiraIssue> {
-        return await this.sendRequest(
+        const response = await this.sendRequest(
             {
                 url: this.buildUrl(`/issue/${issue}`),
                 method: 'GET',
                 headers: this.buildHeaders(),
             }
         )
+        await fetch(response.issue.fields.issuetype.iconUrl, { headers: this.buildHeaders() }).then(
+            resp => resp.blob()
+        ).then(blob => 
+            response.icon = `data:image/png;base64,${blob}`
+        )
+        // response.icon should now contain the base64 of the image, ready to be passed into `<img src=`
+        return response;
     }
 
     async getSearchResults(query: string, max: number): Promise<IJiraSearchResults> {

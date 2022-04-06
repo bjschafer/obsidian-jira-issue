@@ -5,11 +5,13 @@ export enum EAuthenticationTypes {
     OPEN = 'OPEN',
     BASIC = 'BASIC',
     BEARER_TOKEN = 'BEARER_TOKEN',
+    CUSTOM = 'CUSTOM',
 }
 const AUTHENTICATION_TYPE_DESCRIPTION = {
     [EAuthenticationTypes.OPEN]: 'Open',
     [EAuthenticationTypes.BASIC]: 'Basic Authentication',
     [EAuthenticationTypes.BEARER_TOKEN]: 'Bearer Token',
+    [EAuthenticationTypes.CUSTOM]: 'Custom Command'
 }
 
 export enum ESearchResultsRenderingTypes {
@@ -27,6 +29,8 @@ export interface IJiraIssueSettings {
     username?: string
     password?: string
     bareToken?: string
+    headerName?: string
+    customCommand?: string
     apiBasePath: string
     cacheTime: string
     searchResultsLimit: number
@@ -39,6 +43,7 @@ const DEFAULT_SETTINGS: IJiraIssueSettings = {
     authenticationType: EAuthenticationTypes.OPEN,
     apiBasePath: '/rest/api/latest',
     password: '********',
+    headerName: 'Authorization',
     cacheTime: '15m',
     searchResultsLimit: 10,
     statusColorCache: {},
@@ -128,6 +133,26 @@ export class JiraIssueSettingsTab extends PluginSettingTab {
                 .setValue(this._data.bareToken)
                 .onChange(async (value) => {
                     this._data.bareToken = value
+                    await this.saveSettings()
+                }))
+        new Setting(containerEl)
+            .setName('Authorization header name')
+            .setDesc('Header name to pass, if not Authorization.')
+            .addText(text => text
+                // .setPlaceholder('')
+                .setValue(this._data.headerName)
+                .onChange(async (value) => {
+                    this._data.headerName = value
+                    await this.saveSettings()
+                }))
+        new Setting(containerEl)
+            .setName('Custom command')
+            .setDesc('Custom command to run to get an auth header')
+            .addText(text => text
+                // .setPlaceholder('')
+                .setValue(this._data.customCommand)
+                .onChange(async (value) => {
+                    this._data.customCommand = value
                     await this.saveSettings()
                 }))
 

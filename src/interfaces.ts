@@ -1,6 +1,7 @@
 export interface IJiraIssue {
     id: string
     key: string
+    icon: string
     fields: {
         assignee: IJiraUser
         created: string
